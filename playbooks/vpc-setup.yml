@@ -91,3 +91,14 @@
         resource_tags:
           Name: java-app-private-subnet-3
       register: private_subnet_3_output  
+
+    - name: Creating a internet gateway
+      ec2_vpc_igw:
+        vpc_id: "{{vpcOutput.vpc.id}}"
+        region: "{{region}}"
+        state: "{{state}}"
+        resource_tags:
+          Name: java-app-igw
+      register: igw_output
+
+    - name: Creating a new route table
