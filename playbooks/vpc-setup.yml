@@ -1,0 +1,16 @@
+- hosts: localhost
+  connection: local
+  gather_facts: False
+  tasks:
+    - name: Import VPC Variables
+      include_vars: vars/vpc_setup
+    
+    - name: Create VPC for java application
+      ec2_vpc_net:
+        name: "{{vpc_name}}"
+        cidr_block: "{{vpcCidr}}"
+        dns_support: yes
+        dns_hostname: yes
+        tenancy: default
+        state: {{state}}
+      register: output
