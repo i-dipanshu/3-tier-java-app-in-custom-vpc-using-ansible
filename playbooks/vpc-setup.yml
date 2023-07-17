@@ -3,7 +3,7 @@
   gather_facts: False
   tasks:
     - name: Import VPC Variables
-      include_vars: vars/vpc_setup
+      include_vars: ../vars/vpc_setup
     
     - name: Create VPC for java application
       ec2_vpc_net:
