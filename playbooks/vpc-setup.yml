@@ -43,3 +43,51 @@
         resource_tags:
           Name: java-app-public-subnet-2
       register: public_subnet_2_output
+    
+    - name: Create the 3rd public subnet
+      ec2_vpc_subnet:
+        vpc_id: "{{vpcOutput.vpc.id}}"
+        region: "{{region}}"
+        az: "{{zone3}}"
+        state: "{{state}}"
+        cidr: "{{PubSub3Cidr}}"
+        map_public: yes
+        resource_tags:
+          Name: java-app-public-subnet-3
+      register: public_subnet_3_output
+
+    - name: Create the 1st private subnet
+      ec2_vpc_subnet:
+        vpc_id: "{{vpcOutput.vpc.id}}"
+        region: "{{region}}"
+        az: "{{zone1}}"
+        state: "{{state}}"
+        cidr: "{{PrivSub1Cidr}}"
+        map_public: yes
+        resource_tags:
+          Name: java-app-private-subnet-1
+      register: private_subnet_1_output
+
+    - name: Create the 2nd private subnet
+      ec2_vpc_subnet:
+        vpc_id: "{{vpcOutput.vpc.id}}"
+        region: "{{region}}"
+        az: "{{zone2}}"
+        state: "{{state}}"
+        cidr: "{{PrivSub2Cidr}}"
+        map_public: yes
+        resource_tags:
+          Name: java-app-private-subnet-2
+      register: private_subnet_2_output
+
+    - name: Create the 3rd private subnet
+      ec2_vpc_subnet:
+        vpc_id: "{{vpcOutput.vpc.id}}"
+        region: "{{region}}"
+        az: "{{zone3}}"
+        state: "{{state}}"
+        cidr: "{{PrivSub3Cidr}}"
+        map_public: yes
+        resource_tags:
+          Name: java-app-private-subnet-3
+      register: private_subnet_3_output  
