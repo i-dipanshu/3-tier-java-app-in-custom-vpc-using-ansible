@@ -97,8 +97,46 @@
         vpc_id: "{{vpcOutput.vpc.id}}"
         region: "{{region}}"
         state: "{{state}}"
-        resource_tags:
+        tags:
           Name: java-app-igw
       register: igw_output
 
-    - name: Creating a new route table
+    - name: Creating a route table for public subnet
+      ec2_vpc_route_table:
+        vpc_id: "{{vpcOutput.vpc.id}}"
+        region: "{{region}}"
+        tags:
+          Name: java-app-public-igw
+        subnets:
+          - "{{public_subnet_1_output.id}}"
+          - "{{public_subnet_2_output.id}}"
+          - "{{public_subnet_3_output.id}}"
+        routes:
+          - dest: 0.0.0.0/0
+            gateway_id: "{{igw_output.gateway_id}}"
+        register: public_route_table_output
+    
+    - name: Creating a NAT gateway and assigning a elastic IP to internet
+      ec2_vpc_nat_gateway:
+        state: "{{state}}"
+        subnet_id: "{{public_subnet_1_output.subnet.id}}"
+        wait: yes
+        region: "{{region}}"
+        if_exist_do_not_create: true
+      register: nat_gateway_output
+
+    - name: Creating a route table for private subnet
+      ec2_vpc_route_table:
+        vpc_id: "{{vpcOutput.vpc.id}}"
+        region: "{{region}}"
+        tags:
+          Name: java-app-private-igw
+        subnets:
+          - "{{private_subnet_1_output.id}}"
+          - "{{private_subnet_2_output.id}}"
+          - "{{private_subnet_3_output.id}}"
+        routes:
+          - dest: 0.0.0.0/0
+            gateway_id: "{{nat_gateway_output.nat_gateway_id}}"
+        register: private_route_table_output
+
