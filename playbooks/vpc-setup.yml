@@ -12,5 +12,9 @@
         dns_support: yes
         dns_hostname: yes
         tenancy: default
-        state: {{state}}
+        state: "{{state}}"
       register: output
+    
+    - name: Print the output
+      debug:
+        var: output
