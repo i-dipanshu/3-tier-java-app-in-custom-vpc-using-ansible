@@ -1,0 +1,67 @@
+- name: Setup an ec2 instance for our bastion host
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Import variables 
+      include_vars: 
+        dir: ../vars
+        extensions:
+          - yaml
+          - yml
+          - json
+    
+    - name: Create a key-pair
+      ec2_key:
+        name: java-app-bastion-control
+        region: "{{region}}"
+      register: key_output
+
+    - name: Save the above created key into a file
+      copy:
+        content: "{{key_output.key.private_key}}"
+        dest: ../java-app-bastion-control.pem
+        mode: 0600
+      when: key_output.changed
+
+    - name: Create a security group
+      ec2_group:
+        name: bastion_sg
+        description: security group for bastion host
+        region: "{{region}}"
+        vpc_id: "{{vpcId}}"
+        rules: 
+          - proto: tcp
+            from_port: 22
+            to_port: 22
+            cidr_ip: "{{MY_IP}}"
+      register: bastion_sg_output
+
+    - name: Creating a ec2 instance
+      ec2:
+        key_name: java-app-bastion-control
+        region: "{{region}}"
+        instance_type: t2.micro
+        image: "{{bastion_ami}}"
+        wait: yes
+        wait_timeout: 300
+        instance_tags:
+          Name: "Bastion Host"
+          Project: "Java app"
+          Owner: Devops admin
+        exact_count: 1
+        count_tags:
+          Name: "Bastion Host"
+          Project: "Java app"
+          Owner: Devops admin
+        group_id: "{{bastion_sg_output.group_id}}"
+        vpc_subnet_id: "{{public_sub_1}}"
+      register: bastion_ec2_machine_output
+
+    - name: Save Ids
+      copy:
+        content: |
+          ec2_instance_id: "{{bastion_ec2_machine_output.instance_id}}"
+        dest: ../vars/bastion_id.yml
+
+    
