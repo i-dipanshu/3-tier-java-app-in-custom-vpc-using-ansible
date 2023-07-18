@@ -140,3 +140,34 @@
             gateway_id: "{{nat_gateway_output.nat_gateway_id}}"
       register: private_route_table_output
 
+    - name: Print the id of above created resources
+      debug:
+        var: "{{item}}"
+      loop:
+        - vpcId: "{{vpcOutput.vpc.id}}"
+        - public_sub_1: "{{public_subnet_1_output.subnet.id}}"
+        - public_sub_2: "{{public_subnet_2_output.subnet.id}}"
+        - public_sub_3: "{{public_subnet_3_output.subnet.id}}"
+        - private_sub_1: "{{private_subnet_1_output.subnet.id}}"
+        - private_sub_2: "{{private_subnet_2_output.subnet.id}}"
+        - private_sub_3: "{{private_subnet_3_output.subnet.id}}"
+        - igId: "{{igw_output.gateway_id}}"
+        - natID: "{{nat_gateway_output.nat_gateway_id}}"
+
+    - name: Creating key pairs for storing the variables
+      set_fact:
+        output_variables: 
+          vpcId: "{{vpcOutput.vpc.id}}"
+          public_sub_1: "{{public_subnet_1_output.subnet.id}}"
+          public_sub_2: "{{public_subnet_2_output.subnet.id}}"
+          public_sub_3: "{{public_subnet_3_output.subnet.id}}"
+          private_sub_1: "{{private_subnet_1_output.subnet.id}}"
+          private_sub_2: "{{private_subnet_2_output.subnet.id}}"
+          private_sub_3: "{{private_subnet_3_output.subnet.id}}"
+          igId: "{{igw_output.gateway_id}}"
+          natID: "{{nat_gateway_output.nat_gateway_id}}"
+
+    - name: Create and save a output to store above generated Ids
+      copy:
+        content: "{{ output_variables | to_nice_yaml(indent=2) }}"
+        dest: ../vars/output.yml
