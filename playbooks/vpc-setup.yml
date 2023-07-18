@@ -105,16 +105,16 @@
       ec2_vpc_route_table:
         vpc_id: "{{vpcOutput.vpc.id}}"
         region: "{{region}}"
-        tags:
+        resource_tags:
           Name: java-app-public-igw
         subnets:
-          - "{{public_subnet_1_output.id}}"
-          - "{{public_subnet_2_output.id}}"
-          - "{{public_subnet_3_output.id}}"
+          - "{{public_subnet_1_output.subnet.id}}"
+          - "{{public_subnet_2_output.subnet.id}}"
+          - "{{public_subnet_3_output.subnet.id}}"
         routes:
           - dest: 0.0.0.0/0
             gateway_id: "{{igw_output.gateway_id}}"
-        register: public_route_table_output
+      register: public_route_table_output
     
     - name: Creating a NAT gateway and assigning a elastic IP to internet
       ec2_vpc_nat_gateway:
@@ -132,11 +132,11 @@
         tags:
           Name: java-app-private-igw
         subnets:
-          - "{{private_subnet_1_output.id}}"
-          - "{{private_subnet_2_output.id}}"
-          - "{{private_subnet_3_output.id}}"
+          - "{{private_subnet_1_output.subnet.id}}"
+          - "{{private_subnet_2_output.subnet.id}}"
+          - "{{private_subnet_3_output.subnet.id}}"
         routes:
           - dest: 0.0.0.0/0
             gateway_id: "{{nat_gateway_output.nat_gateway_id}}"
-        register: private_route_table_output
+      register: private_route_table_output
 
