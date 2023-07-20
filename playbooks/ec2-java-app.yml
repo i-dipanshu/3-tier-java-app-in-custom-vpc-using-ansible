@@ -61,5 +61,103 @@
         rules: 
           - proto: all
             group_id: "{{java_app_sg_output.group_id}}"
+    
+    - name: Create the instance for nginx web server in private subnet 
+      ec2: 
+        key_name: java-app-kp
+        region: "{{region}}"
+        instance_type: t2.micro
+        image: "{{nginx_ami}}"
+        group_id: "{{java_app_sg_output.group_id}}"
+        vpc_subnet_id: "{{private_sub_1}}"
+        wait: yes
+        wait_timeout: 300
+        instance_tags: 
+          Name: "App"
+          Project: "Java app Stack"
+        exact_count: 1
+        count_tag:
+          Name: "nginx"
+          Project: "Java app Stack"
+      register: nginx_instance_output
+    
+    - name: Create the instance for tomcat web server in private subnet 
+      ec2: 
+        key_name: java-app-kp
+        region: "{{region}}"
+        instance_type: t2.micro
+        image: "{{tomcat_ami}}"
+        group_id: "{{java_app_sg_output.group_id}}"
+        vpc_subnet_id: "{{private_sub_1}}"
+        wait: yes
+        wait_timeout: 300
+        instance_tags: 
+          Name: "tomcat"
+          Project: "Java app Stack"
+        exact_count: 1
+        count_tag:
+          Name: "tomcat"
+          Project: "Java app Stack"
+      register: tomcat_instance_output
+    
+    - name: Create the instance for memcache in private subnet 
+      ec2: 
+        key_name: java-app-kp
+        region: "{{region}}"
+        instance_type: t2.micro
+        image: "{{memcache_ami}}"
+        group_id: "{{java_app_sg_output.group_id}}"
+        vpc_subnet_id: "{{private_sub_1}}"
+        wait: yes
+        wait_timeout: 300
+        instance_tags: 
+          Name: "memcache"
+          Project: "Java app Stack"
+        exact_count: 1
+        count_tag:
+          Name: "memcache"
+          Project: "Java app Stack"
+      register: memcache_instance_output
+
+    - name: Create the instance for rabbit mq in private subnet 
+      ec2: 
+        key_name: java-app-kp
+        region: "{{region}}"
+        instance_type: t2.micro
+        image: "{{rmq_ami}}"
+        group_id: "{{java_app_sg_output.group_id}}"
+        vpc_subnet_id: "{{private_sub_1}}"
+        wait: yes
+        wait_timeout: 300
+        instance_tags: 
+          Name: "rmq"
+          Project: "Java app Stack"
+        exact_count: 1
+        count_tag:
+          Name: "rmq"
+          Project: "Java app Stack"
+      register: rmq_instance_output  
+    
+    - name: Create the instance for mysql in private subnet 
+      ec2: 
+        key_name: java-app-kp
+        region: "{{region}}"
+        instance_type: t2.micro
+        image: "{{mysql_ami}}"
+        group_id: "{{java_app_sg_output.group_id}}"
+        vpc_subnet_id: "{{private_sub_1}}"
+        wait: yes
+        wait_timeout: 300
+        instance_tags: 
+          Name: "mysql"
+          Project: "Java app Stack"
+        exact_count: 1
+        count_tag:
+          Name: "mysql"
+          Project: "Java app Stack"
+      register: mysql_instance_output
+    
+    
+
 
       
