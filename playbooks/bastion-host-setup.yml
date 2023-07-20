@@ -59,9 +59,11 @@
       register: bastion_ec2_machine_output
 
     - name: Save Ids
-      copy:
-        content: |
-          ec2_instance_id: "{{bastion_ec2_machine_output.instance_id}}"
-        dest: ../vars/bastion_id.yml
+      blockinfile:
+        path: ../vars/id.yml
+        backup: no
+        block: |
+          bastion_ec2_instance_id: "{{bastion_ec2_machine_output.instance_id}}"
+          bastion_sg_id: "{{bastion_sg_output.group_id}}"
 
     

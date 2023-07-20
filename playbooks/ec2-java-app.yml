@@ -1,0 +1,65 @@
+- name: Setup the java application stack 
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Import vars
+      include_vars:
+        dir: ../vars
+    
+    - name: Creating key pair
+      ec2_key:
+        name: java-app-kp
+        region: "{{region}}"
+      register: java-app-kp-output
+
+    - name: Save the key-pair
+      copy: 
+        content: "{{java-app-kp-output.key.private_key}}"
+        dest: ../java-app-kp.pem
+        mode: 0600
+      when: java-app-kp-output.changed
+    
+    - name: Create a security group for load balancer
+      ec2_group:
+        name: elb_sg
+        description: security group for elastic load balancer
+        region: "{{region}}"
+        vpc_id: "{{vpcId}}"
+        rules: 
+          - proto: tcp
+            from_port: 80
+            to_port: 80
+            cidr_ip: 0.0.0.0/0
+      register: elb_sg_output
+
+    - name: Create security group for java application stack
+      ec2_group: 
+        name: java_app_sg
+        description: security group for java application stack
+        region: "{{region}}"
+        vpc_id: "{{vpcId}}"
+        purge_rules: no 
+        rules: 
+          - proto: tcp
+            from_port: 80
+            to_port: 80
+            group_id: "{{elb_sg_output.group_id}}"
+
+          - proto: tcp
+            from_port: 22
+            to_port: 22
+            group_id: "{{bastion_sg_id}}"
+      register: java_app_sg_output
+
+    - name: Update the security group of java_app_sg with its own sg id
+      ec2_group:
+        name: java_app_sg
+        region: "{{region}}"
+        vpc_id: "{{vpcId}}"
+        purge_rules: no 
+        rules: 
+          - proto: all
+            group_id: "{{java_app_sg_output.group_id}}"
+
+      
