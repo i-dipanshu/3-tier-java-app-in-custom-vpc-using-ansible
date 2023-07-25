@@ -11,14 +11,14 @@
       ec2_key:
         name: java-app-kp
         region: "{{region}}"
-      register: java-app-kp-output
+      register: java_app_kp_output
 
     - name: Save the key-pair
       copy: 
         content: "{{java-app-kp-output.key.private_key}}"
         dest: ../java-app-kp.pem
         mode: 0600
-      when: java-app-kp-output.changed
+      when: java_app_kp_output.changed
     
     - name: Create a security group for load balancer
       ec2_group:
