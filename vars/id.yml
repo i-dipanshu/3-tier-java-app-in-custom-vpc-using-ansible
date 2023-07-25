@@ -1,8 +1,15 @@
-igId: igw-0780csw341d39af21
-private_sub_1: subnet-01b343bf50056c65b
-private_sub_2: subnet-0aeff986f445a60e15
-private_sub_3: subnet-0c7434e20e31981a9a
-public_sub_1: subnet-0726433460ef4fb2c1
-public_sub_2: subnet-00a7543cbf66de8b
-public_sub_3: subnet-081654343045c8557a
-vpcId: vpc-00c2e943rbe988f664
+igId: igw-002f9fe94fdd603a5
+natID: nat-0f006dbabb2b12711
+private_route_tb: rtb-04ac478f425a45cb1
+private_sub_1: subnet-08552eee4027a3888
+private_sub_2: subnet-0e5f966889bdb7dbe
+private_sub_3: subnet-0e2d2076155a0f648
+public_route_tb: rtb-0e3fa06fe6bed44d6
+public_sub_1: subnet-003df4c782bead2d8
+public_sub_2: subnet-054747bd873d28a56
+public_sub_3: subnet-09acaf18bb591c884
+vpcId: vpc-0aee8ec2d5a06d0e1
+# BEGIN ANSIBLE MANAGED BLOCK
+bastion_ec2_instance_id: "i-0d9e8bd010922f438"
+bastion_sg_id: "sg-0fd8debab1e698081"
+# END ANSIBLE MANAGED BLOCK
