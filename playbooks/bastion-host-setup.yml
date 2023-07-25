@@ -50,7 +50,7 @@
           Project: "Java app"
           Owner: Devops admin
         exact_count: 1
-        count_tags:
+        count_tag:
           Name: "Bastion Host"
           Project: "Java app"
           Owner: Devops admin
