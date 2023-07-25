@@ -160,7 +160,7 @@
     
     - name: Create the load balancer and put nginx servers in it
       local_action:
-        module: ec2_classic_lb
+        module: elb_classic_lb
         name: "java-app-elb"
         region: "{{region}}"
         state: present
