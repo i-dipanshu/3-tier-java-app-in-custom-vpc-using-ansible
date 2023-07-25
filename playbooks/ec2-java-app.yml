@@ -55,6 +55,7 @@
     - name: Update the security group of java_app_sg with its own sg id
       ec2_group:
         name: java_app_sg
+        description: security group for java application stack
         region: "{{region}}"
         vpc_id: "{{vpcId}}"
         purge_rules: no 
