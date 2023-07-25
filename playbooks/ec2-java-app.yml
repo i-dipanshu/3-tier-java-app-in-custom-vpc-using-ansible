@@ -15,7 +15,7 @@
 
     - name: Save the key-pair
       copy: 
-        content: "{{java-app-kp-output.key.private_key}}"
+        content: "{{java_app_kp_output.key.private_key}}"
         dest: ../java-app-kp.pem
         mode: 0600
       when: java_app_kp_output.changed
