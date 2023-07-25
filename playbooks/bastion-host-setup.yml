@@ -63,7 +63,7 @@
         path: ../vars/id.yml
         backup: no
         block: |
-          bastion_ec2_instance_id: "{{bastion_ec2_machine_output.instance_id}}"
+          bastion_ec2_instance_id: "{{bastion_ec2_machine_output.tagged_instances[0].id}}"
           bastion_sg_id: "{{bastion_sg_output.group_id}}"
 
     
