@@ -1,0 +1,10 @@
+upstream java-app {
+    server nginx:8080;
+}
+
+server {
+    listen 80;
+    location / {
+     proxy_pass http://java-app;
+   }
+}

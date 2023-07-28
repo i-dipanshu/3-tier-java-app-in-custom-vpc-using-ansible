@@ -1,0 +1,237 @@
+- name: Setup the java application stack 
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Import vars
+      include_vars:
+        dir: ../vars
+    
+    - name: Creating key pair
+      ec2_key:
+        name: java-app-kp
+        region: "{{region}}"
+      register: java_app_kp_output
+
+    - name: Save the key-pair
+      copy: 
+        content: "{{java_app_kp_output.key.private_key}}"
+        dest: ../java-app-kp.pem
+        mode: 0600
+      when: java_app_kp_output.changed
+    
+    - name: Create a security group for load balancer
+      ec2_group:
+        name: elb_sg
+        description: security group for elastic load balancer
+        region: "{{region}}"
+        vpc_id: "{{vpcId}}"
+        rules: 
+          - proto: tcp
+            from_port: 80
+            to_port: 80
+            cidr_ip: 0.0.0.0/0
+      register: elb_sg_output
+
+    - name: Create security group for java application stack
+      ec2_group: 
+        name: java_app_sg
+        description: security group for java application stack
+        region: "{{region}}"
+        vpc_id: "{{vpcId}}"
+        purge_rules: no 
+        rules: 
+          - proto: tcp
+            from_port: 80
+            to_port: 80
+            group_id: "{{elb_sg_output.group_id}}"
+
+          - proto: tcp
+            from_port: 22
+            to_port: 22
+            group_id: "{{bastion_sg_id}}"
+      register: java_app_sg_output
+
+    - name: Update the security group of java_app_sg with its own sg id
+      ec2_group:
+        name: java_app_sg
+        description: security group for java application stack
+        region: "{{region}}"
+        vpc_id: "{{vpcId}}"
+        purge_rules: no 
+        rules: 
+          - proto: all
+            group_id: "{{java_app_sg_output.group_id}}"
+    
+    - name: Create the instance for nginx web server in private subnet 
+      ec2: 
+        key_name: java-app-kp
+        region: "{{region}}"
+        instance_type: t2.micro
+        image: "{{nginx_ami}}"
+        group_id: "{{java_app_sg_output.group_id}}"
+        vpc_subnet_id: "{{private_sub_1}}"
+        wait: yes
+        wait_timeout: 300
+        instance_tags: 
+          Name: "nginx"
+          Project: "Java app Stack"
+        exact_count: 1
+        count_tag:
+          Name: "nginx"
+          Project: "Java app Stack"
+      register: nginx_instance_output
+    
+    - name: Create the instance for tomcat web server in private subnet 
+      ec2: 
+        key_name: java-app-kp
+        region: "{{region}}"
+        instance_type: t2.micro
+        image: "{{tomcat_ami}}"
+        group_id: "{{java_app_sg_output.group_id}}"
+        vpc_subnet_id: "{{private_sub_1}}"
+        wait: yes
+        wait_timeout: 300
+        instance_tags: 
+          Name: "tomcat"
+          Project: "Java app Stack"
+        exact_count: 1
+        count_tag:
+          Name: "tomcat"
+          Project: "Java app Stack"
+      register: tomcat_instance_output
+    
+    - name: Create the instance for memcache in private subnet 
+      ec2: 
+        key_name: java-app-kp
+        region: "{{region}}"
+        instance_type: t2.micro
+        image: "{{memcache_ami}}"
+        group_id: "{{java_app_sg_output.group_id}}"
+        vpc_subnet_id: "{{private_sub_1}}"
+        wait: yes
+        wait_timeout: 300
+        instance_tags: 
+          Name: "memcache"
+          Project: "Java app Stack"
+        exact_count: 1
+        count_tag:
+          Name: "memcache"
+          Project: "Java app Stack"
+      register: memcache_instance_output
+
+    - name: Create the instance for rabbit mq in private subnet 
+      ec2: 
+        key_name: java-app-kp
+        region: "{{region}}"
+        instance_type: t2.micro
+        image: "{{rmq_ami}}"
+        group_id: "{{java_app_sg_output.group_id}}"
+        vpc_subnet_id: "{{private_sub_1}}"
+        wait: yes
+        wait_timeout: 300
+        instance_tags: 
+          Name: "rmq"
+          Project: "Java app Stack"
+        exact_count: 1
+        count_tag:
+          Name: "rmq"
+          Project: "Java app Stack"
+      register: rmq_instance_output  
+    
+    - name: Create the instance for mysql in private subnet 
+      ec2: 
+        key_name: java-app-kp
+        region: "{{region}}"
+        instance_type: t2.micro
+        image: "{{mysql_ami}}"
+        group_id: "{{java_app_sg_output.group_id}}"
+        vpc_subnet_id: "{{private_sub_1}}"
+        wait: yes
+        wait_timeout: 300
+        instance_tags: 
+          Name: "mysql"
+          Project: "Java app Stack"
+        exact_count: 1
+        count_tag:
+          Name: "mysql"
+          Project: "Java app Stack"
+      register: mysql_instance_output
+    
+    - name: Create the load balancer and put nginx servers in it
+      local_action:
+        module: elb_classic_lb
+        name: "java-app-elb"
+        region: "{{region}}"
+        state: present
+        instance_ids:
+          - "{{nginx_instance_output.tagged_instances[0].id}}"
+        purge_instance_ids: true
+        security_group_ids: "{{elb_sg_output.group_id}}"
+        subnets:
+          - "{{public_sub_1}}"
+          - "{{public_sub_2}}"
+          - "{{public_sub_3}}"
+        listeners:
+          - protocol: http
+            load_balancer_port: 80
+            instance_port: 80
+
+    - name: Insert/Update hosts ip and name 
+      blockinfile:
+        path: ../provision_stack/group_vars/host_ip.yml
+        block: |
+          nginx_ip: {{ nginx_instance_output.tagged_instances[0].private_ip}}
+          tomcat_ip: {{ tomcat_instance_output.tagged_instances[0].private_ip}}
+          memcache_ip: {{ memcache_instance_output.tagged_instances[0].private_ip}}
+          rmq_ip: {{ rmq_instance_output.tagged_instances[0].private_ip}}
+          mysql_ip: {{ mysql_instance_output.tagged_instances[0].private_ip}}
+        
+    - name: Copy the key-pair to /provision_stack/group_vars
+      copy:
+        src: ../java-app-kp.pem
+        dest: ../provision_stack/group_vars/java-app-kp.pem
+        mode: '0400'
+
+    - name: Insert and update inventory files in provision_stack/inventory.yml
+      blockinfile:
+        path: ../provision_stack/inventory.yml
+        block: |
+          nginx ansible_host: {{ nginx_instance_output.tagged_instances[0].private_ip}}
+          tomcat ansible_host: {{ tomcat_instance_output.tagged_instances[0].private_ip}}
+          memcache ansible_host: {{ memcache_instance_output.tagged_instances[0].private_ip}}
+          rmq ansible_host: {{ rmq_instance_output.tagged_instances[0].private_ip}}
+          mysql ansible_host: {{ mysql_instance_output.tagged_instances[0].private_ip}}
+          control_machine  ansible_host: 127.0.0.1 ansible_connection=local
+
+          [websrvgrp]
+          nginx
+
+          [appsrvgrp]
+          tomcat
+
+          [rmqsrvgrp]
+          rmq
+
+          [mcsrvgrp]
+          memcache
+
+          [dbsrvgrp]
+          mysql
+
+          [control]
+          control_machine
+
+          [stack_inst:children]
+          websrvgrp
+          appsrvgrp
+          rmqsrvgrp
+          mcsrvgrp
+          dbsrvgrp
+
+          [stack_inst:vars]
+          ansible_user: ubuntu
+          ansible_ssh_private_key_file=java-app-kp.pem
+          #ansible_python_interpreter=/usr/bin/python3
+
+      

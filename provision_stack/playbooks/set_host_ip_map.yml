@@ -1,0 +1,15 @@
+- name: Set host to ip mapping in /etc/hosts file of all the instances in the stack
+  hosts: all
+  tasks:
+    - name: Import VPC setup Variable
+      include_vars: ../group_vars/host_ip.yml
+
+    - name: Update hosts file for all the hosts
+      blockinfile:
+        path: /etc/hosts
+        block: |
+          {{nginx_ip}} nginx
+          {{tomcat_ip}} tomcat
+          {{rmq_ip}} rmq
+          {{memcache_ip}} memcache
+          {{mysql_ip}} mysql
